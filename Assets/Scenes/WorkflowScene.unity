@@ -1371,7 +1371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b27153c10634412e84332bce4c6df7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _catalog: {fileID: 0}
+  _catalog: {fileID: 11400000, guid: 059bc6124c63242a0a27701eedec65bb, type: 2}
   _fallbackColor: {r: 0, g: 1, b: 0, a: 1}
   _fallbackScale: 0.1
   _smoothingAlpha: 0.2
