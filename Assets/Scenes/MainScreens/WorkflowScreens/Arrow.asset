@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a618e0b6eeadd4c9e8e2a463d022429e, type: 3}
+  m_Name: Arrow
+  m_EditorClassIdentifier: 
+  _entries:
+  - Key: Cover
+    Prefab: {fileID: 2996380161978737021, guid: a564c0ddd86dd4b60b85e339d5290027,
+      type: 3}
