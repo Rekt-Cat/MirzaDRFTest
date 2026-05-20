@@ -398,9 +398,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _uiDocument: {fileID: 201790122}
   _stepAssets:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 040a9cd6a0e82438d92ac2762d060f68, type: 2}
+  - {fileID: 11400000, guid: c5c985a441b324c6ba8e6621416eec2f, type: 2}
+  - {fileID: 11400000, guid: 681eb7ed657944fe887cf14958caa13a, type: 2}
 --- !u!114 &201790125
 MonoBehaviour:
   m_ObjectHideFlags: 0
