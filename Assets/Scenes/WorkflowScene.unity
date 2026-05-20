@@ -747,6 +747,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _glassesContentRoot: {fileID: 2108373792}
   _xrOrigin: {fileID: 550366159}
+  _arCameraManager: {fileID: 1020869300}
 --- !u!114 &986371123 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8072846791457684462, guid: d2e0f84b3e5914a7d8d0f7bd1deed88d, type: 3}
