@@ -34,6 +34,19 @@ public class WorkflowDRFManager : MonoBehaviour
 
     private SpacesLifecycleEvents _lifecycleEvents;
 
+    private void Awake()
+    {
+        // Auto-find if not wired in Inspector.
+        if (_arCameraManager == null)
+            _arCameraManager = FindObjectOfType<ARCameraManager>(true);
+
+        // Disable immediately in Awake — before the XR init coroutine runs and
+        // DynamicOpenXRLoader enables XR Origin. Unity preserves component.enabled
+        // when a parent is toggled, so this stays off until OnOpenXRStarted fires.
+        if (_arCameraManager != null)
+            _arCameraManager.enabled = false;
+    }
+
     private void Start()
     {
         _lifecycleEvents = FindFirstObjectByType<SpacesLifecycleEvents>();
