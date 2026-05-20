@@ -1,5 +1,6 @@
 #if USING_SNAPDRAGON_SPACES_SDK
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -25,6 +26,11 @@ public class WorkflowDRFManager : MonoBehaviour
     [Tooltip("XR Origin GameObject. On device, DynamicOpenXRLoader manages this via " +
              "AutoManageXRCamera. In the Editor, simulation shortcuts drive it here.")]
     [SerializeField] private GameObject _xrOrigin;
+
+    [Tooltip("ARCameraManager inside XR Origin. Explicitly disabled until OpenXR starts to " +
+             "prevent XRCameraSubsystem:TryGetLatestFrame error spam during the window between " +
+             "DynamicOpenXRLoader enabling XR Origin and the camera subsystem being ready.")]
+    [SerializeField] private ARCameraManager _arCameraManager;
 
     private SpacesLifecycleEvents _lifecycleEvents;
 
@@ -74,6 +80,13 @@ public class WorkflowDRFManager : MonoBehaviour
     {
         if (_glassesContentRoot != null)
             _glassesContentRoot.SetActive(active);
+
+        // Keep ARCameraManager disabled until the subsystem is confirmed running.
+        // DynamicOpenXRLoader enables XR Origin (and thus ARCameraManager) the moment
+        // glasses connect, but the native camera provider isn't ready for frames yet —
+        // this causes a flood of TryGetLatestFrame errors until we explicitly gate it here.
+        if (_arCameraManager != null)
+            _arCameraManager.enabled = active;
 
 #if UNITY_EDITOR
         // DynamicOpenXRLoader handles XR Origin on device via AutoManageXRCamera.

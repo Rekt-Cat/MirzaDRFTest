@@ -164,6 +164,7 @@ public class ImageDetection : MonoBehaviour
         if (!_detectionEnabled || _inferenceRunning) return;
         if (++_frameCount % inferenceEveryNFrames != 0) return;
         if (arCameraManager == null) return;
+        if (arCameraManager.subsystem == null || !arCameraManager.subsystem.running) return;
         if (!arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage image)) return;
         if (!image.valid) { image.Dispose(); return; }
 
