@@ -71,7 +71,7 @@ public class WorkflowARImageTrackingController : MonoBehaviour
         if (image.trackingState != TrackingState.Tracking) return;
         if (!string.Equals(image.referenceImage.name, _targetImageName, StringComparison.OrdinalIgnoreCase)) return;
 
-        WorkflowEvents.RaiseTargetPoseUpdated(new Pose(image.transform.position, image.transform.rotation));
+        _logger.Log($"Target '{_targetImageName}' tracked at {image.transform.position}");
     }
 }
 #endif
