@@ -28,8 +28,13 @@ public class WorkflowARImageTrackingController : MonoBehaviour
     [Header("Tracking Mode")]
     [SerializeField] SpacesImageTrackingMode _trackingMode = SpacesImageTrackingMode.DYNAMIC;
 
+    [Header("Bounding Box")]
+    [SerializeField] Color _boxColor = Color.green;
+    [SerializeField] float _lineWidth = 0.005f;
+
     SpacesLifecycleEvents _lifecycleEvents;
     bool _isDetected;
+    LineRenderer _boxLine;
     private readonly Logger _logger = new(true, nameof(WorkflowARImageTrackingController));
 
     void Awake()
@@ -46,6 +51,8 @@ public class WorkflowARImageTrackingController : MonoBehaviour
             _lifecycleEvents.OnOpenXRStarted.AddListener(OnOpenXRStarted);
             _lifecycleEvents.OnOpenXRStopped.AddListener(OnOpenXRStopped);
         }
+
+        CreateBoundingBox();
     }
 
     void OnDestroy()
@@ -133,7 +140,6 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs args)
     {
-        _logger.Log($"OnTrackedImagesChanged — added={args.added.Count} updated={args.updated.Count} removed={args.removed.Count}");
         foreach (var image in args.added)   CheckImage(image);
         foreach (var image in args.updated) CheckImage(image);
 
@@ -142,6 +148,7 @@ public class WorkflowARImageTrackingController : MonoBehaviour
             if (string.Equals(image.referenceImage.name, _targetImageName, StringComparison.OrdinalIgnoreCase))
             {
                 _isDetected = false;
+                _logger.Log("Target image removed — status=Detecting");
                 WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detecting);
             }
         }
@@ -149,23 +156,65 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void CheckImage(ARTrackedImage image)
     {
-        bool isTarget = string.Equals(image.referenceImage.name, _targetImageName, StringComparison.OrdinalIgnoreCase);
-        _logger.Log($"CheckImage — name='{image.referenceImage.name}' isTarget={isTarget} state={image.trackingState}");
+        if (!string.Equals(image.referenceImage.name, _targetImageName, StringComparison.OrdinalIgnoreCase)) return;
 
-        if (!isTarget) return;
-
-        if (image.trackingState == TrackingState.Tracking && !_isDetected)
+        if (image.trackingState == TrackingState.Tracking)
         {
-            _isDetected = true;
-            _logger.Log($"status=Detected pos={image.transform.position}");
-            WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detected);
+            UpdateBoundingBox(image);
+            if (!_isDetected)
+            {
+                _isDetected = true;
+                _logger.Log($"Detected '{_targetImageName}' at {image.transform.position}");
+                WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detected);
+            }
         }
-        else if (image.trackingState != TrackingState.Tracking && _isDetected)
+        else if (_isDetected)
         {
             _isDetected = false;
-            _logger.Log($"Image lost — status=Detecting");
+            HideBoundingBox();
+            _logger.Log($"Lost '{_targetImageName}' — status=Detecting");
             WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detecting);
         }
+    }
+
+    void CreateBoundingBox()
+    {
+        var go = new GameObject("ImageTrackingBoundingBox");
+        go.transform.SetParent(transform, false);
+
+        _boxLine = go.AddComponent<LineRenderer>();
+        _boxLine.positionCount = 5;
+        _boxLine.loop = false;
+        _boxLine.useWorldSpace = true;
+        _boxLine.startWidth = _lineWidth;
+        _boxLine.endWidth   = _lineWidth;
+        _boxLine.startColor = _boxColor;
+        _boxLine.endColor   = _boxColor;
+        _boxLine.material   = new Material(Shader.Find("Sprites/Default"));
+        _boxLine.enabled    = false;
+    }
+
+    void UpdateBoundingBox(ARTrackedImage image)
+    {
+        if (_boxLine == null) return;
+
+        Vector2 size = image.size * 0.5f;
+        Transform t  = image.transform;
+
+        // Four corners in image local space, then transform to world space.
+        Vector3 tl = t.TransformPoint(new Vector3(-size.x,  0f,  size.y));
+        Vector3 tr = t.TransformPoint(new Vector3( size.x,  0f,  size.y));
+        Vector3 br = t.TransformPoint(new Vector3( size.x,  0f, -size.y));
+        Vector3 bl = t.TransformPoint(new Vector3(-size.x,  0f, -size.y));
+
+        _boxLine.SetPositions(new[] { tl, tr, br, bl, tl });
+        _boxLine.enabled = true;
+    }
+
+    void HideBoundingBox()
+    {
+        if (_boxLine != null)
+            _boxLine.enabled = false;
     }
 }
 #endif
