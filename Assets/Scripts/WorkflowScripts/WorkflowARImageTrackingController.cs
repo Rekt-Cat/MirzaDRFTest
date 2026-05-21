@@ -79,7 +79,8 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnOpenXRStarted()
     {
-        _logger.Log("OnOpenXRStarted — status=Detecting");
+        bool subsystemRunning = _trackedImageManager != null && _trackedImageManager.subsystem != null && _trackedImageManager.subsystem.running;
+        _logger.Log($"OnOpenXRStarted — status=Detecting  subsystem.running={subsystemRunning}");
         _isDetected = false;
         WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detecting);
         ApplyTrackingMode();
@@ -122,6 +123,7 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs args)
     {
+        _logger.Log($"OnTrackedImagesChanged — added={args.added.Count} updated={args.updated.Count} removed={args.removed.Count}");
         foreach (var image in args.added)   CheckImage(image);
         foreach (var image in args.updated) CheckImage(image);
 
