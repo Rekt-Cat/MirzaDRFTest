@@ -80,8 +80,18 @@ public class WorkflowARImageTrackingController : MonoBehaviour
     void OnOpenXRStarted()
     {
         bool subsystemRunning = _trackedImageManager != null && _trackedImageManager.subsystem != null && _trackedImageManager.subsystem.running;
-        _logger.Log($"OnOpenXRStarted — status=Detecting  subsystem.running={subsystemRunning}");
+        _logger.Log($"OnOpenXRStarted — subsystem.running={subsystemRunning}");
         _isDetected = false;
+
+        // Re-subscribe here because OnDisable (fired by SpacesLifecycleEvents.OnSceneLoaded
+        // during scene load) removes the subscription before OnOpenXRStarted runs.
+        if (_trackedImageManager != null)
+        {
+            _trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
+            _trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
+            _logger.Log("OnOpenXRStarted — re-subscribed to trackedImagesChanged");
+        }
+
         WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detecting);
         ApplyTrackingMode();
     }
