@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="root" style="flex-grow: 1; background-color: rgba(10, 12, 24, 0.92); align-items: center; justify-content: center;">
+        <ui:VisualElement name="card" style="background-color: rgba(255, 255, 255, 0.06); border-top-left-radius: 24px; border-top-right-radius: 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; padding-top: 60px; padding-bottom: 60px; padding-left: 60px; padding-right: 60px; align-items: center; min-width: 500px;">
+            <ui:VisualElement name="status-indicator" style="width: 64px; height: 64px; border-top-left-radius: 32px; border-top-right-radius: 32px; border-bottom-left-radius: 32px; border-bottom-right-radius: 32px; background-color: rgb(100, 100, 120); margin-bottom: 32px;" />
+            <ui:Label name="status-label" text="Starting" style="font-size: 36px; -unity-font-style: bold; color: rgb(220, 220, 240); margin-bottom: 16px; -unity-text-align: middle-center;" />
+            <ui:Label name="status-detail" text="Initialising XR session..." style="font-size: 18px; color: rgba(180, 180, 200, 0.7); -unity-text-align: middle-center; white-space: normal;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
