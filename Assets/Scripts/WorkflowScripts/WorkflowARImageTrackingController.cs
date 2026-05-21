@@ -34,16 +34,28 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnEnable()
     {
+        _logger.Log("OnEnable — status=Starting");
         WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Starting);
+
+        _logger.Log($"trackedImageManager={(_trackedImageManager == null ? "NULL" : "assigned")}  imageConfigurator={(_imageConfigurator == null ? "NULL" : "assigned")}");
 
         if (_trackedImageManager != null)
             _trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
 
         _lifecycleEvents = FindObjectOfType<SpacesLifecycleEvents>();
+        _logger.Log($"SpacesLifecycleEvents found={_lifecycleEvents != null}");
+
         if (_lifecycleEvents != null)
         {
             _lifecycleEvents.OnOpenXRStarted.AddListener(OnOpenXRStarted);
             _lifecycleEvents.OnOpenXRStopped.AddListener(OnOpenXRStopped);
+        }
+
+        // Catch up if OpenXR already running before this script enabled
+        if (DynamicOpenXRLoader.Instance != null && DynamicOpenXRLoader.Instance.AreSubsystemsRunning)
+        {
+            _logger.Log("OpenXR already running on OnEnable — catching up to Detecting");
+            OnOpenXRStarted();
         }
 
         ApplyTrackingMode();
@@ -51,6 +63,7 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnDisable()
     {
+        _logger.Log("OnDisable");
         if (_trackedImageManager != null)
             _trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
 
@@ -63,6 +76,7 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnOpenXRStarted()
     {
+        _logger.Log("OnOpenXRStarted — status=Detecting");
         _isDetected = false;
         WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detecting);
         ApplyTrackingMode();
@@ -70,18 +84,32 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void OnOpenXRStopped()
     {
+        _logger.Log("OnOpenXRStopped — status=Starting");
         _isDetected = false;
         WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Starting);
     }
 
     void ApplyTrackingMode()
     {
-        if (_imageConfigurator == null || string.IsNullOrEmpty(_targetImageName)) return;
-        if (!_imageConfigurator.HasReferenceImageTrackingMode(_targetImageName)) return;
+        if (_imageConfigurator == null)
+        {
+            _logger.Log("ApplyTrackingMode — imageConfigurator is NULL, skipping");
+            return;
+        }
+        if (string.IsNullOrEmpty(_targetImageName))
+        {
+            _logger.Log("ApplyTrackingMode — targetImageName is empty, skipping");
+            return;
+        }
+
+        bool hasImage = _imageConfigurator.HasReferenceImageTrackingMode(_targetImageName);
+        _logger.Log($"ApplyTrackingMode — HasReferenceImageTrackingMode('{_targetImageName}')={hasImage}");
+        if (!hasImage) return;
 
         try
         {
             _imageConfigurator.SetTrackingModeForReferenceImage(_targetImageName, _trackingMode);
+            _logger.Log($"ApplyTrackingMode — SUCCESS mode={_trackingMode}");
         }
         catch (Exception e)
         {
@@ -106,17 +134,21 @@ public class WorkflowARImageTrackingController : MonoBehaviour
 
     void CheckImage(ARTrackedImage image)
     {
-        if (!string.Equals(image.referenceImage.name, _targetImageName, StringComparison.OrdinalIgnoreCase)) return;
+        bool isTarget = string.Equals(image.referenceImage.name, _targetImageName, StringComparison.OrdinalIgnoreCase);
+        _logger.Log($"CheckImage — name='{image.referenceImage.name}' isTarget={isTarget} state={image.trackingState}");
+
+        if (!isTarget) return;
 
         if (image.trackingState == TrackingState.Tracking && !_isDetected)
         {
             _isDetected = true;
+            _logger.Log($"status=Detected pos={image.transform.position}");
             WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detected);
-            _logger.Log($"Detected '{_targetImageName}' at {image.transform.position}");
         }
         else if (image.trackingState != TrackingState.Tracking && _isDetected)
         {
             _isDetected = false;
+            _logger.Log($"Image lost — status=Detecting");
             WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Detecting);
         }
     }
