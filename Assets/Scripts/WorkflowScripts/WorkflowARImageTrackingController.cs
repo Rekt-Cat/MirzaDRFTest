@@ -32,46 +32,49 @@ public class WorkflowARImageTrackingController : MonoBehaviour
     bool _isDetected;
     private readonly Logger _logger = new(true, nameof(WorkflowARImageTrackingController));
 
-    void OnEnable()
+    void Awake()
     {
-        _logger.Log("OnEnable — status=Starting");
-        WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Starting);
-
-        _logger.Log($"trackedImageManager={(_trackedImageManager == null ? "NULL" : "assigned")}  imageConfigurator={(_imageConfigurator == null ? "NULL" : "assigned")}");
-
-        if (_trackedImageManager != null)
-            _trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
-
+        // Register lifecycle listeners in Awake so they survive OnEnable/OnDisable cycles.
+        // SpacesLifecycleEvents.OnSceneLoaded fires OnOpenXRStopped during scene load which
+        // triggers OnDisable — if listeners were registered in OnEnable they'd be removed
+        // before OpenXR actually starts, causing the status to stay on Starting forever.
         _lifecycleEvents = FindObjectOfType<SpacesLifecycleEvents>();
-        _logger.Log($"SpacesLifecycleEvents found={_lifecycleEvents != null}");
+        _logger.Log($"[Awake] SpacesLifecycleEvents found={_lifecycleEvents != null}");
 
         if (_lifecycleEvents != null)
         {
             _lifecycleEvents.OnOpenXRStarted.AddListener(OnOpenXRStarted);
             _lifecycleEvents.OnOpenXRStopped.AddListener(OnOpenXRStopped);
         }
-
-        // Catch up if OpenXR already running before this script enabled
-        if (DynamicOpenXRLoader.Instance != null && DynamicOpenXRLoader.Instance.AreSubsystemsRunning)
-        {
-            _logger.Log("OpenXR already running on OnEnable — catching up to Detecting");
-            OnOpenXRStarted();
-        }
-
-        ApplyTrackingMode();
     }
 
-    void OnDisable()
+    void OnDestroy()
     {
-        _logger.Log("OnDisable");
-        if (_trackedImageManager != null)
-            _trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
-
         if (_lifecycleEvents != null)
         {
             _lifecycleEvents.OnOpenXRStarted.RemoveListener(OnOpenXRStarted);
             _lifecycleEvents.OnOpenXRStopped.RemoveListener(OnOpenXRStopped);
         }
+    }
+
+    void OnEnable()
+    {
+        WorkflowTrackingEvents.Raise(WorkflowTrackingStatus.Starting);
+
+        if (_trackedImageManager != null)
+            _trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
+
+        if (DynamicOpenXRLoader.Instance != null && DynamicOpenXRLoader.Instance.AreSubsystemsRunning)
+        {
+            _logger.Log("OpenXR already running on OnEnable — catching up to Detecting");
+            OnOpenXRStarted();
+        }
+    }
+
+    void OnDisable()
+    {
+        if (_trackedImageManager != null)
+            _trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
     }
 
     void OnOpenXRStarted()

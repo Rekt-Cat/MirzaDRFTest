@@ -108,18 +108,20 @@ public class WorkflowDRFManager : MonoBehaviour
     public static void SimulateDRFStart()
     {
         if (!Application.isPlaying) return;
-        var mgr = FindFirstObjectByType<WorkflowDRFManager>();
-        if (mgr != null) mgr.OnOpenXRStarted();
-        else Debug.LogWarning("[WorkflowDRFManager] Not found in scene.");
+        // Invoke SpacesLifecycleEvents so ALL listeners (including WorkflowARImageTrackingController)
+        // receive the signal, not just WorkflowDRFManager.
+        var lifecycle = FindFirstObjectByType<SpacesLifecycleEvents>();
+        if (lifecycle != null) lifecycle.OnOpenXRStarted?.Invoke();
+        else Debug.LogWarning("[WorkflowDRFManager] SimulateDRFStart: SpacesLifecycleEvents not found.");
     }
 
     [MenuItem("Window/XR/Snapdragon Spaces/Workflow DRF/Simulate DRF Stop #&4")]
     public static void SimulateDRFStop()
     {
         if (!Application.isPlaying) return;
-        var mgr = FindFirstObjectByType<WorkflowDRFManager>();
-        if (mgr != null) mgr.OnOpenXRStopped();
-        else Debug.LogWarning("[WorkflowDRFManager] Not found in scene.");
+        var lifecycle = FindFirstObjectByType<SpacesLifecycleEvents>();
+        if (lifecycle != null) lifecycle.OnOpenXRStopped?.Invoke();
+        else Debug.LogWarning("[WorkflowDRFManager] SimulateDRFStop: SpacesLifecycleEvents not found.");
     }
 #endif
 }
